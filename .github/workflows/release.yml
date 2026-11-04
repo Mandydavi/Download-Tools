@@ -36,12 +36,12 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -o out
 
-      - name: 重命名产物（文件名带版本号，避免用户目录里堆一堆同名文件）
+      - name: 重命名产物（ASCII 文件名：中文在 Actions 里会被吞掉）
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}".TrimStart('v')
           $src = "out/ComfyDL.exe"
-          $dst = "out/极速下载器-$tag.exe"
+          $dst = "out/ComfyDL-$tag.exe"
           Move-Item $src $dst
           $size = (Get-Item $dst).Length
           $hash = (Get-FileHash $dst -Algorithm SHA256).Hash.ToLower()

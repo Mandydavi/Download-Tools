@@ -98,7 +98,7 @@ public sealed class AppSettings
     /// <summary>version.json 地址；留空 = 不检查更新（GitHub raw / jsDelivr / Gitee raw 均可）</summary>
     [JsonPropertyName("updateFeed")]
     public string UpdateFeed { get; set; } =
-        "https://raw.githubusercontent.com/Mandydavi/Download-Tools/main/version.json";
+        "https://cdn.jsdelivr.net/gh/Mandydavi/Download-Tools@main/version.json";
 
     [JsonIgnore]
     public static string ConfigPath

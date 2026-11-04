@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -48,9 +49,61 @@ public static class UpdateService
         var feed = (App.Settings.UpdateFeed ?? "").Trim();
         if (feed.Length == 0) return null;
 
+        // 依次尝试多个镜像：国内直连 raw.githubusercontent 基本不通，jsDelivr 通常可达
+        foreach (var url in Candidates(feed))
+        {
+            try
+            {
+                var json = await ComfyNet.Http.GetStringAsync(url, ct);
+                return Parse(json);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // 换下一个源
+            }
+        }
+        return null;
+    }
+
+    /// <summary>把配置的一个地址展开成多个候选（raw ↔ jsDelivr ↔ gcore）</summary>
+    private static IEnumerable<string> Candidates(string feed)
+    {
+        yield return feed;
+
+        var raw = System.Text.RegularExpressions.Regex.Match(
+            feed, @"raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/(.+)");
+        if (raw.Success)
+        {
+            var owner = raw.Groups[1].Value;
+            var repo = raw.Groups[2].Value;
+            var branch = raw.Groups[3].Value;
+            var path = raw.Groups[4].Value;
+            yield return $"https://cdn.jsdelivr.net/gh/{owner}/{repo}@{branch}/{path}";
+            yield return $"https://gcore.jsdelivr.net/gh/{owner}/{repo}@{branch}/{path}";
+            yield break;
+        }
+
+        var cdn = System.Text.RegularExpressions.Regex.Match(
+            feed, @"(?:cdn|fastly|gcore)\.jsdelivr\.net/gh/([^/]+)/([^@]+)@([^/]+)/(.+)");
+        if (cdn.Success)
+        {
+            var owner = cdn.Groups[1].Value;
+            var repo = cdn.Groups[2].Value;
+            var branch = cdn.Groups[3].Value;
+            var path = cdn.Groups[4].Value;
+            yield return $"https://gcore.jsdelivr.net/gh/{owner}/{repo}@{branch}/{path}";
+            yield return $"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}";
+        }
+    }
+
+    private static UpdateInfo? Parse(string json)
+    {
         try
         {
-            var json = await ComfyNet.Http.GetStringAsync(feed, ct);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -74,7 +127,7 @@ public static class UpdateService
         }
         catch
         {
-            return null;   // 网络不通不该打扰用户
+            return null;   // 内容不合法就当作没有更新
         }
     }
 }
