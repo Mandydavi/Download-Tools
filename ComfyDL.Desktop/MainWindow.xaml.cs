@@ -407,20 +407,17 @@ public partial class MainWindow : Window
 
         if (info == null)
         {
+            if (UpdateStatusText != null) UpdateStatusText.Text = "已是最新版本";
+
             if (manual)
-            {
-                bool configured = !string.IsNullOrWhiteSpace(App.Settings.UpdateFeed);
-                MessageBox.Show(this,
-                    configured
-                        ? $"当前已是最新版本（{UpdateService.CurrentText}）。"
-                        : "还没有配置更新源。\n\n在设置 → 下载引擎里填入 version.json 地址即可启用。",
+                MessageBox.Show(this, $"当前已是最新版本（{UpdateService.CurrentText}）。",
                     "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
             return;
         }
 
         _pendingUpdate = info;
         Log($"发现新版本 {info.Version}（当前 {UpdateService.CurrentText}）");
+        if (UpdateStatusText != null) UpdateStatusText.Text = $"发现新版本 {info.Version}";
 
         if (UpdatePill != null)
         {
@@ -447,10 +444,9 @@ public partial class MainWindow : Window
 
     private void CheckUpdate_Click(object sender, RoutedEventArgs e) => CheckUpdateAsync(true);
 
-    private void UpdateFeedBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void AutoUpdateSwitch_Click(object sender, RoutedEventArgs e)
     {
-        if (!_ready) return;
-        App.Settings.UpdateFeed = (UpdateFeedBox.Text ?? "").Trim();
+        App.Settings.AutoCheckUpdate = AutoUpdateSwitch.IsChecked == true;
         App.Settings.Save();
     }
 
@@ -490,8 +486,8 @@ public partial class MainWindow : Window
         int idx = Array.IndexOf(conns, s.Connections);
         ConnCombo.SelectedIndex = s.AutoConnections ? 0 : (idx >= 0 ? idx + 1 : 3);
 
-        VersionLine.Text = UpdateService.CurrentText;
-        UpdateFeedBox.Text = s.UpdateFeed ?? "";
+        VersionLine.Text = "极速下载器 " + UpdateService.CurrentText;
+        AutoUpdateSwitch.IsChecked = s.AutoCheckUpdate;
 
         RefreshAriaInfo();
     }

@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "date": "2026-11-05",
   "size": 70576290,
   "url": "https://github.com/Mandydavi/Download-Tools/releases/latest",
-  "notes": "首个公开版本：通用下载、多源竞速、托盘通知、联网更新"
+  "notes": "更新设置不再显示更新源地址；改为版本 + 自动检查开关"
 }
