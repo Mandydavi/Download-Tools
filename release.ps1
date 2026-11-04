@@ -91,10 +91,11 @@ if ($DryRun) {
 }
 
 # ---------- 1. 关进程 ----------
-$running = Get-Process -Name ComfyDL -ErrorAction SilentlyContinue
-if ($running) {
+# 发布版进程名是 极速下载器，调试版是 ComfyDL，两个都要关
+$running = @(Get-Process -Name ComfyDL, 极速下载器 -ErrorAction SilentlyContinue)
+if ($running.Count -gt 0) {
     $running | Stop-Process -Force
-    Start-Sleep -Milliseconds 500
+    Start-Sleep -Milliseconds 700
     Say "  [1/5] 已关闭正在运行的实例" "DarkGray"
 }
 
