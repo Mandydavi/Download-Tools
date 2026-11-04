@@ -49,6 +49,11 @@ public static class UpdateService
         var feed = (App.Settings.UpdateFeed ?? "").Trim();
         if (feed.Length == 0) return null;
 
+        // 先按「最新 tag」取文件：jsDelivr 对 @main 有最长 12 小时的缓存，
+        // 而 @v1.2.3 这种 tag 地址是实时的。tag 从 github.com 的 atom 源读（国内可达）。
+        var byTag = await TryByNewestTagAsync(feed, ct);
+        if (byTag != null) return byTag;
+
         // 依次尝试多个镜像：国内直连 raw.githubusercontent 基本不通，jsDelivr 通常可达
         foreach (var url in Candidates(feed))
         {
@@ -67,6 +72,40 @@ public static class UpdateService
             }
         }
         return null;
+    }
+
+
+    /// <summary>从 releases.atom 读最新 tag，再取该 tag 下的 version.json（无缓存延迟）</summary>
+    private static async Task<UpdateInfo?> TryByNewestTagAsync(string feed, CancellationToken ct)
+    {
+        try
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(
+                feed, @"jsdelivr\.net/gh/([^/]+)/([^@/]+)@");
+            if (!m.Success) return null;
+
+            var owner = m.Groups[1].Value;
+            var repo = m.Groups[2].Value;
+
+            var atom = await ComfyNet.Http.GetStringAsync(
+                $"https://github.com/{owner}/{repo}/releases.atom", ct);
+
+            var tag = System.Text.RegularExpressions.Regex.Match(
+                atom, @"<entry>\s*<id>[^<]*/([^/<]+)</id>");
+            if (!tag.Success) return null;
+
+            var url = $"https://cdn.jsdelivr.net/gh/{owner}/{repo}@{tag.Groups[1].Value}/version.json";
+            var json = await ComfyNet.Http.GetStringAsync(url, ct);
+            return Parse(json);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;   // 失败就走后面的常规候选
+        }
     }
 
     /// <summary>把配置的一个地址展开成多个候选（raw ↔ jsDelivr ↔ gcore）</summary>

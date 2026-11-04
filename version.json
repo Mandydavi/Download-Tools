@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "date": "2026-11-05",
-  "size": 70576290,
+  "size": 70577826,
   "url": "https://github.com/Mandydavi/Download-Tools/releases/latest",
-  "notes": "更新设置不再显示更新源地址；改为版本 + 自动检查开关"
+  "notes": "更新检查按最新 tag 取文件，绕开 CDN 缓存；发布标记为正式版"
 }

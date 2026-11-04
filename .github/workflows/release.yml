@@ -68,6 +68,8 @@ jobs:
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: false
+          make_latest: true
           files: |
             ${{ env.asset }}
             ${{ env.zipfile }}
