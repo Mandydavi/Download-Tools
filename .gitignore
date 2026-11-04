@@ -6,6 +6,7 @@ publish/
 *.suo
 
 # 本地二进制与历史版本（仓库里只放源码）
+MDV Tool.exe
 极速下载器.exe
 aria2c.exe
 旧版本/

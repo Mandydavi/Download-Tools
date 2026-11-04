@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="MDV Tool — 粘一条链接，剩下的交给它">
+  <rect width="1200" height="300" fill="#0A0E15"/>
+  <rect x="0" y="0" width="6" height="300" fill="#6E8DFF"/>
+
+  <g font-family="system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif">
+    <text x="64" y="126" font-size="62" font-weight="700" fill="#E9EFF9" letter-spacing="-1">MDV Tool</text>
+    <rect x="66" y="150" width="48" height="5" rx="2.5" fill="#6E8DFF"/>
+    <text x="64" y="200" font-size="23" fill="#A9B6CC">粘一条链接，剩下的交给它</text>
+    <text x="64" y="240" font-size="12" letter-spacing="2.4" fill="#6B7A93">MULTI-SOURCE RACING DOWNLOADER · BY MANDYDAVI</text>
+  </g>
+
+  <g fill="none" stroke-linecap="round">
+    <path d="M 792 58 C 880 58, 892 140, 968 140" stroke="#B4C3FF" stroke-width="3"/>
+    <path d="M 762 108 C 860 108, 892 140, 968 140" stroke="#8FA6FF" stroke-width="3"/>
+    <path d="M 762 172 C 860 172, 892 140, 968 140" stroke="#6E8DFF" stroke-width="3"/>
+    <path d="M 792 222 C 880 222, 892 140, 968 140" stroke="#4C66C0" stroke-width="3"/>
+    <path d="M 968 140 L 968 202" stroke="#6E8DFF" stroke-width="8"/>
+    <path d="M 950 186 L 968 208 L 986 186" stroke="#6E8DFF" stroke-width="8" stroke-linejoin="round"/>
+  </g>
+  <g fill="#6E8DFF">
+    <circle cx="792" cy="58" r="6"/>
+    <circle cx="762" cy="108" r="6"/>
+    <circle cx="762" cy="172" r="6"/>
+    <circle cx="792" cy="222" r="6"/>
+  </g>
+  <rect x="912" y="232" width="112" height="34" rx="9" fill="#182344" stroke="#6E8DFF" stroke-width="1.5"/>
+  <text x="968" y="254" text-anchor="middle" font-size="13" fill="#9AAFFF"
+        font-family="system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif" font-weight="600">本地</text>
+</svg>
