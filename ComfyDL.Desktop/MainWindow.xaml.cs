@@ -137,6 +137,7 @@ public partial class MainWindow : Window
         Log("极速下载器已就绪（C# / WPF 原生客户端）。");
 
         InitTray();
+        Closing += Window_Closing;
         Closed += (_, _) =>
         {
             if (_tray == null) return;
@@ -252,13 +253,12 @@ public partial class MainWindow : Window
         {
             if (Aria2.Find() != null) return;
 
-            var r = MessageBox.Show(this,
-                "没有找到下载引擎 aria2c.exe。\n\n" +
-                "它是多线程分段下载的核心，缺少它无法下载任何文件。\n\n" +
+            var r = await AskAsync("缺少下载引擎",
+                "没有找到 aria2c.exe。它是多线程分段下载的核心，缺少它无法下载任何文件。\n\n" +
                 "现在自动获取吗？（压缩包约 1.8 MB，来自 aria2 官方发布页）",
-                "缺少下载引擎", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                "自动获取", "手动安装", "稍后");
 
-            if (r == MessageBoxResult.Yes) await InstallEngineAsync();
+            if (r == AskResult.Primary) await InstallEngineAsync();
             else Log("[!] 未安装引擎，下载功能不可用。可手动下载后放到程序目录。");
         }
         catch (Exception ex)
@@ -300,17 +300,15 @@ public partial class MainWindow : Window
             Log("引擎已安装：" + target);
             RefreshAriaInfo();
 
-            MessageBox.Show(this, "下载引擎已就绪，现在可以正常下载了。", "完成",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            Ask("下载引擎已就绪", "现在可以正常下载了。", "好");
         }
         catch (Exception ex)
         {
             Log("[错误] 获取引擎失败：" + ex.Message);
-            var r = MessageBox.Show(this,
-                "自动获取失败：" + ex.Message + "\n\n要打开 aria2 官方发布页手动下载吗？\n" +
-                "下载后把 aria2c.exe 放到程序所在目录即可。",
-                "获取失败", MessageBoxButton.YesNo, MessageBoxImage.Error);
-            if (r == MessageBoxResult.Yes)
+            var r = Ask("自动获取失败",
+                ex.Message + "\n\n要打开 aria2 官方发布页手动下载吗？下载后把 aria2c.exe 放到程序所在目录即可。",
+                "打开发布页", "关闭");
+            if (r == AskResult.Primary)
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "https://github.com/aria2/aria2/releases",
@@ -328,6 +326,7 @@ public partial class MainWindow : Window
     // v2.4 · 托盘常驻 + 完成通知
     // ==================================================================
     private System.Windows.Forms.NotifyIcon? _tray;
+    private bool _exiting;
 
     private void InitTray()
     {
@@ -351,6 +350,7 @@ public partial class MainWindow : Window
             menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             menu.Items.Add("退出", null, (_, _) =>
             {
+                _exiting = true;                    // 绕过关闭询问
                 if (_tray != null) _tray.Visible = false;
                 Close();
             });
@@ -410,8 +410,7 @@ public partial class MainWindow : Window
             if (UpdateStatusText != null) UpdateStatusText.Text = "已是最新版本";
 
             if (manual)
-                MessageBox.Show(this, $"当前已是最新版本（{UpdateService.CurrentText}）。",
-                    "检查更新", MessageBoxButton.OK, MessageBoxImage.Information);
+                Ask("检查更新", $"当前已是最新版本（{UpdateService.CurrentText}）。", "知道了");
             return;
         }
 
@@ -451,6 +450,113 @@ public partial class MainWindow : Window
     }
 
 
+
+    // ==================================================================
+    // 关闭行为：收进托盘 / 询问 / 直接退出
+    // ==================================================================
+    private void CloseCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_ready) return;
+        App.Settings.CloseAction = CloseCombo.SelectedIndex switch
+        {
+            0 => "tray",
+            2 => "exit",
+            _ => "ask"
+        };
+        App.Settings.Save();
+    }
+
+
+    // ==================================================================
+    // 通用确认弹层（替代系统 MessageBox，保持界面风格一致）
+    // ==================================================================
+    private enum AskResult { Primary, Secondary, Cancel }
+    private TaskCompletionSource<AskResult>? _askTcs;
+
+    private Task<AskResult> AskAsync(string title, string body, string primary,
+        string? secondary = null, string? cancel = null)
+    {
+        AskTitle.Text = title;
+        AskBody.Text = body;
+        AskPrimaryBtn.Content = primary;
+
+        AskSecondBtn.Content = secondary ?? "";
+        AskSecondBtn.Visibility = secondary == null ? Visibility.Collapsed : Visibility.Visible;
+
+        AskCancelBtn.Content = cancel ?? "";
+        AskCancelBtn.Visibility = cancel == null ? Visibility.Collapsed : Visibility.Visible;
+
+        _askTcs = new TaskCompletionSource<AskResult>();
+        AskOverlay.Visibility = Visibility.Visible;
+        return _askTcs.Task;
+    }
+
+    private void FinishAsk(AskResult r)
+    {
+        AskOverlay.Visibility = Visibility.Collapsed;
+        var tcs = _askTcs;
+        _askTcs = null;
+        tcs?.TrySetResult(r);
+    }
+
+    private void AskPrimary_Click(object sender, RoutedEventArgs e) => FinishAsk(AskResult.Primary);
+    private void AskSecond_Click(object sender, RoutedEventArgs e) => FinishAsk(AskResult.Secondary);
+    private void AskCancel_Click(object sender, RoutedEventArgs e) => FinishAsk(AskResult.Cancel);
+    private void AskCard_Click(object sender, MouseButtonEventArgs e) => e.Handled = true;
+    private void AskOverlay_Click(object sender, MouseButtonEventArgs e) => FinishAsk(AskResult.Cancel);
+
+    /// <summary>同步版：给非 async 的调用点用</summary>
+    private AskResult Ask(string title, string body, string primary,
+        string? secondary = null, string? cancel = null)
+    {
+        var task = AskAsync(title, body, primary, secondary, cancel);
+        var frame = new DispatcherFrame();
+        task.ContinueWith(_ => frame.Continue = false,
+            TaskScheduler.FromCurrentSynchronizationContext());
+        Dispatcher.PushFrame(frame);
+        return task.Result;
+    }
+
+    private void Window_Closing(object sender, CancelEventArgs e)
+    {
+        if (_exiting) return;                       // 托盘菜单点了退出
+
+        var action = App.Settings.CloseAction ?? "ask";
+
+        if (action == "exit") return;               // 直接退出
+
+        if (action == "tray")
+        {
+            e.Cancel = true;
+            HideToTray();
+            return;
+        }
+
+        // ask：先拦下来，弹自定义询问框，按用户选择再决定
+        e.Cancel = true;
+        _ = AskCloseAsync();
+    }
+
+    private async Task AskCloseAsync()
+    {
+        int active = _tasks.Count(t => t.IsActive);
+        var body = active > 0
+            ? $"还有 {active} 个任务正在下载。\n\n收进托盘会继续下载，直接退出则全部中断。"
+            : "要收进托盘继续运行，还是直接退出？\n\n这个询问可以在 设置 → 外观 里改掉。";
+
+        var r = await AskAsync("关闭窗口", body, "收进托盘", "直接退出", "取消");
+
+        if (r == AskResult.Primary) HideToTray();
+        else if (r == AskResult.Secondary) { _exiting = true; Close(); }
+    }
+
+    private void HideToTray()
+    {
+        Hide();
+        _tray?.ShowBalloonTip(2500, "极速下载器仍在运行",
+            "双击托盘图标可以重新打开", System.Windows.Forms.ToolTipIcon.Info);
+    }
+
     // ==================================================================
     // 打赏与项目主页：入口在程序里，内容在仓库里
     // 二维码放在 README 而不是打进 exe —— 换码不用发版，也不用担心图被替换
@@ -460,7 +566,17 @@ public partial class MainWindow : Window
     private void OpenRepo_Click(object sender, RoutedEventArgs e) => OpenUrl(RepoUrl);
 
     private void OpenDonate_Click(object sender, RoutedEventArgs e) =>
-        OpenUrl(RepoUrl + "#%E8%B5%9E%E5%8A%A9");   // #赞助
+        DonateOverlay.Visibility = Visibility.Visible;
+
+    private void CloseDonate_Click(object sender, RoutedEventArgs e) =>
+        DonateOverlay.Visibility = Visibility.Collapsed;
+
+    /// <summary>点遮罩关闭；点卡片本身不关</summary>
+    private void DonateOverlay_Click(object sender, MouseButtonEventArgs e) =>
+        DonateOverlay.Visibility = Visibility.Collapsed;
+
+    private void DonateSheet_Click(object sender, MouseButtonEventArgs e) =>
+        e.Handled = true;
 
     private void OpenUrl(string url)
     {
@@ -512,6 +628,12 @@ public partial class MainWindow : Window
 
         VersionLine.Text = "极速下载器 " + UpdateService.CurrentText;
         AutoUpdateSwitch.IsChecked = s.AutoCheckUpdate;
+        CloseCombo.SelectedIndex = (s.CloseAction ?? "ask") switch
+        {
+            "tray" => 0,
+            "exit" => 2,
+            _ => 1
+        };
 
         RefreshAriaInfo();
     }
@@ -723,10 +845,9 @@ public partial class MainWindow : Window
         if (!string.Equals(Path.GetFileName(dlg.FileName), "aria2c.exe",
                 StringComparison.OrdinalIgnoreCase))
         {
-            var ok = MessageBox.Show(this,
-                "选中的文件不叫 aria2c.exe，确定要用它作为下载引擎吗？",
-                "更换引擎", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-            if (ok != MessageBoxResult.OK) return;
+            var ok = Ask("更换引擎",
+                "选中的文件不叫 aria2c.exe，确定要用它作为下载引擎吗？", "使用它", "取消");
+            if (ok != AskResult.Primary) return;
         }
 
         App.Settings.Aria2Path = dlg.FileName;
@@ -749,9 +870,9 @@ public partial class MainWindow : Window
         }
         if (File.Exists(target))
         {
-            var ok = MessageBox.Show(this, "软件目录里已经有 aria2c.exe，要覆盖吗？",
-                "复制到软件目录", MessageBoxButton.OKCancel, MessageBoxImage.Question);
-            if (ok != MessageBoxResult.OK) return;
+            var ok = Ask("复制到软件目录",
+                "软件目录里已经有 aria2c.exe，要覆盖吗？", "覆盖", "取消");
+            if (ok != AskResult.Primary) return;
         }
 
         try
@@ -1196,6 +1317,12 @@ public partial class MainWindow : Window
     {
         if (e.Key != Key.Escape) return;
 
+        if (DonateOverlay.Visibility == Visibility.Visible)
+        {
+            DonateOverlay.Visibility = Visibility.Collapsed;
+            e.Handled = true;
+            return;
+        }
         if (SettingsOverlay.Visibility == Visibility.Visible)
         {
             CloseSettings();
@@ -1662,15 +1789,9 @@ public partial class MainWindow : Window
             const long reserve = 512L * 1024 * 1024;
             if (free >= need + reserve) return true;
 
-            bool go = false;
-            Dispatcher.Invoke(() =>
-            {
-                var r = MessageBox.Show(this,
-                    $"磁盘空间不足\n\n{task.FileName}\n需要 {Fmt.Human(need)}\n{root} 可用 {Fmt.Human(free)}\n\n仍然开始下载吗？",
-                    "空间不足", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                go = r == MessageBoxResult.Yes;
-            });
-            return go;
+            return Dispatcher.Invoke(() => Ask("磁盘空间不足",
+                $"{task.FileName}\n\n需要 {Fmt.Human(need)}，{root} 只剩 {Fmt.Human(free)}。\n\n仍然开始下载吗？",
+                "仍然下载", "跳过") == AskResult.Primary);
         }
         catch
         {
@@ -1689,11 +1810,11 @@ public partial class MainWindow : Window
 
         if (policy == "ask")
         {
-            var r = MessageBox.Show(this,
-                $"目标位置已有同名文件\n\n{Path.GetFileName(destPath)}\n\n是 = 覆盖\n否 = 重命名保存\n取消 = 跳过这个任务",
-                "文件已存在", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-            if (r == MessageBoxResult.Cancel) { skip = true; return false; }
-            policy = r == MessageBoxResult.Yes ? "overwrite" : "rename";
+            var r = Ask("文件已存在",
+                $"目标位置已经有同名文件：\n{Path.GetFileName(destPath)}",
+                "覆盖", "重命名保存", "跳过");
+            if (r == AskResult.Cancel) { skip = true; return false; }
+            policy = r == AskResult.Primary ? "overwrite" : "rename";
         }
 
         if (policy == "skip") { skip = true; return false; }
@@ -2092,10 +2213,9 @@ public partial class MainWindow : Window
         // 正在下载的任务先确认，已结束的直接删
         if (t.IsActive)
         {
-            var ok = MessageBox.Show(this,
-                $"「{t.FileName}」正在下载，删除会中断任务。",
-                "删除任务", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-            if (ok != MessageBoxResult.OK) return;
+            var ok = Ask("删除任务",
+                $"「{t.FileName}」正在下载，删除会中断任务。", "删除", "取消");
+            if (ok != AskResult.Primary) return;
         }
 
         if (_cts.TryGetValue(t.Id, out var cts))
@@ -2237,10 +2357,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var ok = MessageBox.Show(this,
-            $"将删除 {done.Count} 条历史记录，此操作不可撤销。",
-            "清空历史", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-        if (ok != MessageBoxResult.OK) return;
+        var ok = Ask("清空历史",
+            $"将删除 {done.Count} 条历史记录，此操作不可撤销。", "清空", "取消");
+        if (ok != AskResult.Primary) return;
 
         foreach (var t in done)
         {

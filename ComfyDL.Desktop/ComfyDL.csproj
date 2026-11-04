@@ -23,6 +23,9 @@
     <Resource Include="app.ico" />
     <Resource Include="Assets\app-logo.png" />
     <Resource Include="Assets\app-icon.png" />
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\reward-wechat.jpg" />
+    <Resource Include="Assets\reward-alipay.jpg" />
   </ItemGroup>
 
 </Project>

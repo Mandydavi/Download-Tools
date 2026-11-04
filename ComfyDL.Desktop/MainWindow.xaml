@@ -192,11 +192,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                    <Border Width="24" Height="24" CornerRadius="7">
-                        <Border.Background>
-                            <ImageBrush ImageSource="Assets/app-icon.png" Stretch="UniformToFill"/>
-                        </Border.Background>
-                    </Border>
+                    <Image Source="Assets/logo.png" Width="26" Height="26" Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock Text="极速下载器" FontSize="13" FontWeight="SemiBold"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
                     <Border Background="{DynamicResource Surface3}" CornerRadius="5" Padding="5,1"
@@ -285,12 +282,8 @@
                                     Click="NavSettings_Click" ToolTip="设置">
                                 <TextBlock Text="&#xE713;" FontFamily="{StaticResource IconFont}" FontSize="16"/>
                             </Button>
-                            <Border Width="28" Height="28" CornerRadius="9" Margin="0,6,0,0"
-                                    Background="{DynamicResource AccentSoft}">
-                                <TextBlock Text="极" FontSize="11" FontWeight="Bold"
-                                           Foreground="{DynamicResource Accent}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <Image Source="Assets/logo.png" Width="34" Height="34" Margin="0,4,0,2"
+                                   Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -1104,6 +1097,93 @@
                         <!-- ============================================================
                              设置：780 × 552 模态
                              ============================================================ -->
+                        <!-- 通用确认弹层：替换系统 MessageBox，统一界面风格 -->
+                        <Grid x:Name="AskOverlay" Visibility="Collapsed" Panel.ZIndex="90"
+                              Background="{DynamicResource Scrim}" MouseLeftButtonDown="AskOverlay_Click">
+                            <Border Width="424" Background="{DynamicResource Card}" CornerRadius="14"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                                    MouseLeftButtonDown="AskCard_Click">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.28"
+                                                      Color="{DynamicResource Shadow}"/>
+                                </Border.Effect>
+                                <StackPanel Margin="24,22,24,18">
+                                    <TextBlock x:Name="AskTitle" FontSize="15" FontWeight="SemiBold"
+                                               TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="AskBody" FontSize="12" Margin="0,9,0,0"
+                                               Foreground="{DynamicResource Sub}"
+                                               TextWrapping="Wrap" LineHeight="20"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                Margin="0,20,0,0">
+                                        <Button x:Name="AskCancelBtn" Style="{StaticResource Ghost}"
+                                                Visibility="Collapsed" Margin="0,0,8,0"
+                                                Click="AskCancel_Click"/>
+                                        <Button x:Name="AskSecondBtn" Style="{StaticResource Ghost}"
+                                                Visibility="Collapsed" Margin="0,0,8,0"
+                                                Click="AskSecond_Click"/>
+                                        <Button x:Name="AskPrimaryBtn" Style="{StaticResource Primary}"
+                                                Height="32" MinWidth="88" Click="AskPrimary_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- 打赏弹层：应用内展示收款码，不跳浏览器 -->
+                        <Grid x:Name="DonateOverlay" Visibility="Collapsed" Panel.ZIndex="70"
+                              Background="{DynamicResource Scrim}" MouseLeftButtonDown="DonateOverlay_Click">
+                            <Border Width="540" Background="{DynamicResource Card}" CornerRadius="16"
+                                    MouseLeftButtonDown="DonateSheet_Click"
+                                    VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="44" ShadowDepth="12" Opacity="0.30"
+                                                      Color="{DynamicResource Shadow}"/>
+                                </Border.Effect>
+                                <StackPanel Margin="28,24,28,22">
+                                    <TextBlock Text="支持作者" FontSize="17" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="软件完全免费、源码开放，打赏全凭自愿，不影响任何功能"
+                                               Style="{StaticResource DimText}" Margin="0,7,0,0"
+                                               TextAlignment="Center" TextWrapping="Wrap"/>
+
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                                Margin="0,20,0,0">
+                                        <StackPanel VerticalAlignment="Top">
+                                            <TextBlock Text="微信支付" FontSize="12" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <Border BorderBrush="{DynamicResource Border}" BorderThickness="1"
+                                                    CornerRadius="8" Padding="0"
+                                                    Background="White">
+                                                <Image Source="/Assets/reward-wechat.jpg" Width="188"
+                                                       Stretch="Uniform"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Margin="26,0,0,0" VerticalAlignment="Top">
+                                            <TextBlock Text="支付宝" FontSize="12" FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <Border BorderBrush="{DynamicResource Border}" BorderThickness="1"
+                                                    CornerRadius="8" Padding="0"
+                                                    Background="White">
+                                                <Image Source="/Assets/reward-alipay.jpg" Width="188"
+                                                       Stretch="Uniform"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <TextBlock Text="扫码即可，金额随意。谢谢你的支持。"
+                                               Style="{StaticResource DimText}" Margin="0,18,0,0"
+                                               TextAlignment="Center"/>
+
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                                Margin="0,16,0,0">
+                                        <Button Content="关闭" Style="{StaticResource Ghost}"
+                                                Click="CloseDonate_Click"/>
+                                        <Button Content="打开项目主页" Style="{StaticResource MiniBtn}"
+                                                Margin="10,0,0,0" Click="OpenRepo_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
                         <Grid x:Name="SettingsOverlay" Visibility="Collapsed" Panel.ZIndex="60"
                               Background="{DynamicResource Scrim}" MouseLeftButtonDown="SettingsOverlay_Click">
                             <Border Width="780" Height="552" Background="{DynamicResource Card}" CornerRadius="16"
@@ -1529,13 +1609,15 @@
                                                                 <Grid>
                                                                     <StackPanel>
                                                                         <TextBlock Text="关闭窗口时" FontSize="12.5"/>
-                                                                        <TextBlock Text="有任务进行中时的行为"
+                                                                        <TextBlock Text="点右上角关闭按钮时的行为"
                                                                                    Style="{StaticResource DimText}" Margin="0,2,0,0"/>
                                                                     </StackPanel>
-                                                                    <ComboBox Style="{StaticResource BoxCombo}" Width="140"
+                                                                    <ComboBox x:Name="CloseCombo" Style="{StaticResource BoxCombo}"
+                                                                              Width="150"
                                                                               HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                                              SelectedIndex="0">
-                                                                        <ComboBoxItem Content="最小化到托盘"/>
+                                                                              SelectionChanged="CloseCombo_SelectionChanged">
+                                                                        <ComboBoxItem Content="收进托盘继续运行"/>
+                                                                        <ComboBoxItem Content="询问我"/>
                                                                         <ComboBoxItem Content="直接退出"/>
                                                                     </ComboBox>
                                                                 </Grid>

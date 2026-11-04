@@ -95,6 +95,10 @@ public sealed class AppSettings
     [JsonPropertyName("autoCheckUpdate")]
     public bool AutoCheckUpdate { get; set; } = true;
 
+    /// <summary>关闭窗口时的行为：tray 收进托盘 / ask 每次询问 / exit 直接退出</summary>
+    [JsonPropertyName("closeAction")]
+    public string CloseAction { get; set; } = "ask";
+
     /// <summary>version.json 地址；留空 = 不检查更新（GitHub raw / jsDelivr / Gitee raw 均可）</summary>
     [JsonPropertyName("updateFeed")]
     public string UpdateFeed { get; set; } =
