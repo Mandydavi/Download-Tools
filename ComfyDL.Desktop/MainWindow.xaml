@@ -350,7 +350,7 @@
                                                     <TextBlock x:Name="UrlHint" IsHitTestVisible="False"
                                                                VerticalAlignment="Center"
                                                                Foreground="{DynamicResource Dim}" FontSize="13.5"
-                                                               Text="粘贴链接，自动识别来源与类型"/>
+                                                               Text="粘贴下载链接，或把 .torrent 拖进来"/>
                                                 </Grid>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                             VerticalAlignment="Center" Margin="0,0,12,0">
@@ -401,7 +401,7 @@
 
                                         <Grid Grid.Column="0">
                                             <TextBlock x:Name="CapDefaultHint"
-                                                       Text="支持 HuggingFace · Civitai · 直链 · 磁力链接，拖入 .torrent 也可开始"
+                                                       Text="任何链接都能下：软件 / 压缩包 / 镜像 / 视频；模型会自动归到 ComfyUI 目录"
                                                        FontSize="11.5" Foreground="{DynamicResource Dim}"
                                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Style>

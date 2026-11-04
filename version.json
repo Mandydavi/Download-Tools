@@ -1,7 +1,7 @@
 {
-  "version": "2.4.2",
+  "version": "1.0.0",
   "date": "2026-11-05",
   "size": 70576290,
   "url": "https://github.com/Mandydavi/Download-Tools/releases/latest",
-  "notes": "更新检查多源回退（jsDelivr 优先）；修复发布资产名"
+  "notes": "首个公开版本：通用下载、多源竞速、托盘通知、联网更新"
 }

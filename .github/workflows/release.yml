@@ -1,10 +1,14 @@
 # 打 tag 自动构建并发布到 GitHub Releases
 #
-# 用法：把本文件放到仓库的 .github/workflows/release.yml，
-#      然后 git tag v2.4.0 && git push origin v2.4.0
+# 用法：git tag v1.0.0 && git push origin v1.0.0
 #
-# 构建完成后，把 release 页面里的 exe 地址和大小填进 version.json 并提交，
-# 客户端下次启动就能看到「新版本可用」。
+# 产出三个东西：
+#   1. ComfyDL-x.y.z.exe   单文件，双击即用
+#   2. ComfyDL-x.y.z.zip   绿色版，解压即用（含 README / LICENSE）
+#   3. SHA-256 写进 Release 正文
+#
+# 构建完成后记得把 version.json 的 version / size / notes 改成新版本并提交，
+# 客户端下次启动才会看到「新版本可用」。
 
 name: release
 
@@ -36,7 +40,7 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -o out
 
-      - name: 重命名产物（ASCII 文件名：中文在 Actions 里会被吞掉）
+      - name: 重命名产物并算哈希
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}".TrimStart('v')
@@ -51,11 +55,29 @@ jobs:
           Write-Host "大小: $size"
           Write-Host "SHA256: $hash"
 
+      - name: 打包绿色版 ZIP
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          New-Item -ItemType Directory -Path pkg -Force | Out-Null
+          Copy-Item "out/ComfyDL-$tag.exe" pkg/
+          Copy-Item README.md, LICENSE pkg/
+          Compress-Archive -Path "pkg/*" -DestinationPath "out/ComfyDL-$tag.zip" -Force
+          "zipfile=out/ComfyDL-$tag.zip" >> $env:GITHUB_ENV
+
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.asset }}
+          files: |
+            ${{ env.asset }}
+            ${{ env.zipfile }}
           body: |
-            下载 `${{ env.asset }}`（${{ env.size }} 字节）覆盖旧版本即可。
+            **下载方式**
+
+            - `ComfyDL-${{ github.ref_name }}.zip` —— 绿色版，解压即用（推荐）
+            - `${{ env.asset }}` —— 单文件，双击即用
+
+            仅支持 Windows 10 / 11（64 位），无需安装 .NET 运行时。
 
             SHA-256：`${{ env.sha }}`
+            大小：`${{ env.size }}` 字节
