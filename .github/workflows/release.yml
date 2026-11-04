@@ -1,0 +1,61 @@
+# 打 tag 自动构建并发布到 GitHub Releases
+#
+# 用法：把本文件放到仓库的 .github/workflows/release.yml，
+#      然后 git tag v2.4.0 && git push origin v2.4.0
+#
+# 构建完成后，把 release 页面里的 exe 地址和大小填进 version.json 并提交，
+# 客户端下次启动就能看到「新版本可用」。
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: 发布单文件
+        run: >
+          dotnet publish ComfyDL.Desktop/ComfyDL.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o out
+
+      - name: 重命名产物（文件名带版本号，避免用户目录里堆一堆同名文件）
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          $src = "out/ComfyDL.exe"
+          $dst = "out/极速下载器-$tag.exe"
+          Move-Item $src $dst
+          $size = (Get-Item $dst).Length
+          $hash = (Get-FileHash $dst -Algorithm SHA256).Hash.ToLower()
+          "asset=$dst" >> $env:GITHUB_ENV
+          "size=$size" >> $env:GITHUB_ENV
+          "sha=$hash" >> $env:GITHUB_ENV
+          Write-Host "大小: $size"
+          Write-Host "SHA256: $hash"
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.asset }}
+          body: |
+            下载 `${{ env.asset }}`（${{ env.size }} 字节）覆盖旧版本即可。
+
+            SHA-256：`${{ env.sha }}`

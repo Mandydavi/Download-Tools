@@ -1,0 +1,26 @@
+# 构建产物
+bin/
+obj/
+publish/
+*.user
+*.suo
+
+# 本地二进制与历史版本（仓库里只放源码）
+极速下载器.exe
+aria2c.exe
+旧版本/
+备份/
+历史记录/
+*.bak
+*.aria2
+
+# 开发草稿，不对外
+UI评审/
+归档/
+发布物料/
+.workbuddy-ai/
+
+# 系统
+Thumbs.db
+desktop.ini
+.DS_Store
