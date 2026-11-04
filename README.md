@@ -74,6 +74,24 @@ dotnet publish ComfyDL.Desktop/ComfyDL.Desktop.csproj -c Release -r win-x64 ^
 
 更新源默认走 jsDelivr 镜像（`cdn.jsdelivr.net`），失败时自动回退到 raw.githubusercontent 和 gcore —— 因为国内直连 GitHub raw 基本不通。
 
+## 赞助
+
+软件免费、源码全开，没有付费版，也没有任何功能限制。如果它帮你省下了时间，欢迎请作者喝杯咖啡——纯属自愿，不影响使用。
+
+**爱发电**：把下面这行换成你的主页地址
+
+```
+https://afdian.com/a/你的ID
+```
+
+**扫码**：把微信或支付宝收款码存成 `docs/reward.png`，然后删掉下面这行的注释
+
+```html
+<!-- <img src="docs/reward.png" width="220" alt="赞赏码"> -->
+```
+
+> 打赏不换取任何特权，也不影响 issue 的处理顺序。
+
 ## 致谢与许可
 
 本程序自身代码以 [MIT](LICENSE) 许可发布。
