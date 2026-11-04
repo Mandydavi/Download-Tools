@@ -450,6 +450,30 @@ public partial class MainWindow : Window
         App.Settings.Save();
     }
 
+
+    // ==================================================================
+    // 打赏与项目主页：入口在程序里，内容在仓库里
+    // 二维码放在 README 而不是打进 exe —— 换码不用发版，也不用担心图被替换
+    // ==================================================================
+    private const string RepoUrl = "https://github.com/Mandydavi/Download-Tools";
+
+    private void OpenRepo_Click(object sender, RoutedEventArgs e) => OpenUrl(RepoUrl);
+
+    private void OpenDonate_Click(object sender, RoutedEventArgs e) =>
+        OpenUrl(RepoUrl + "#%E8%B5%9E%E5%8A%A9");   // #赞助
+
+    private void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Log("[错误] 打开链接失败：" + ex.Message);
+        }
+    }
+
     private void LoadSettingsIntoUi()
     {
         var s = App.Settings;

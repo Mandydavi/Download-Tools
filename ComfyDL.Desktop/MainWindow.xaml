@@ -1544,8 +1544,24 @@
                                                                 <Grid>
                                                                     <StackPanel>
                                                                         <TextBlock Text="界面框架" FontSize="12.5"/>
-                                                                        <TextBlock Text="C# / WPF (.NET 9) 原生 Windows 客户端"
+                                                                        <TextBlock Text="C# / WPF (.NET 10) 原生 Windows 客户端"
                                                                                    Style="{StaticResource DimText}" Margin="0,2,0,0"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Border>
+                                                            <Border Style="{StaticResource SettingRow}" BorderThickness="0">
+                                                                <Grid>
+                                                                    <StackPanel>
+                                                                        <TextBlock Text="支持作者" FontSize="12.5"/>
+                                                                        <TextBlock Text="软件完全免费、源码开放，打赏全凭自愿"
+                                                                                   Style="{StaticResource DimText}" Margin="0,2,0,0"/>
+                                                                    </StackPanel>
+                                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                                                VerticalAlignment="Center">
+                                                                        <Button Content="项目主页" Style="{StaticResource MiniBtn}"
+                                                                                Click="OpenRepo_Click"/>
+                                                                        <Button Content="赞赏作者" Style="{StaticResource MiniBtn}" Margin="7,0,0,0"
+                                                                                Click="OpenDonate_Click"/>
                                                                     </StackPanel>
                                                                 </Grid>
                                                             </Border>
@@ -1645,9 +1661,34 @@
                                 </ctrl:Sparkline>
                             </Grid>
 
-                            <TextBlock x:Name="SbRight" Grid.Column="4" Text="0 进行中 · 共 0 项"
-                                       FontSize="11.5" Foreground="{DynamicResource Dim}"
-                                       VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- 打赏入口：常驻状态条，不占导航位 -->
+                                <Border x:Name="DonateBtn" Padding="8,3" CornerRadius="6" Margin="0,0,14,0"
+                                        Cursor="Hand" ToolTip="软件免费开源，欢迎请作者喝杯咖啡"
+                                        MouseLeftButtonUp="OpenDonate_Click">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource HoverSoft}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="M12 20.5S3.5 14.8 3.5 8.9A4.4 4.4 0 0 1 12 6.6a4.4 4.4 0 0 1 8.5 2.3c0 5.9-8.5 11.6-8.5 11.6z"
+                                              Fill="{DynamicResource Red}" Width="11" Height="10"
+                                              Stretch="Uniform" VerticalAlignment="Center"/>
+                                        <TextBlock Text="支持作者" FontSize="10.5" Margin="5,0,0,0"
+                                                   Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock x:Name="SbRight" Text="0 进行中 · 共 0 项"
+                                           FontSize="11.5" Foreground="{DynamicResource Dim}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
                 </Grid>

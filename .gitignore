@@ -20,6 +20,11 @@ UI评审/
 发布物料/
 .workbuddy-ai/
 
+# 本机发版脚本与日志（含本地绝对路径，不对外）
+发版.bat
+release.ps1
+更新日志.md
+
 # 系统
 Thumbs.db
 desktop.ini
